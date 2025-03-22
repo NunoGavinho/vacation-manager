@@ -1,38 +1,45 @@
-# Getting Started with Create React App
+# Vacation Manager 🏖️
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Aplicação React com TypeScript para gestão de férias em empresas.  
+Este projeto permite que utilizadores registem pedidos de férias e que administradores visualizem e aprovem.
 
-## Available Scripts
+🚀 **Deploy ativo (sem login necessário):**  
+👉 [Aceder à aplicação](https://main.d2iem4s1nrz4gx.amplifyapp.com)
 
-In the project directory, you can run:
+---
 
-### `npm start`
+## 📦 Instalação Local
 
-Runs the app in the development mode.  
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Para executar o projeto localmente:
 
-The page will reload when you make changes.\# vacation-manager
+bash
+# 1. Clonar o repositório
+git clone https://github.com/NunoGavinho/vacation-manager.git
 
-Sistema de marcação de férias com React, TypeScript e autenticação.
+# 2. Aceder à pasta do projeto
+cd vacation-manager
 
-## ⚙️ Tecnologias principais
+# 3. Instalar dependências
+npm install
 
-- React.js
-- TypeScript
-- React Router
-- Context API
-- Tailwind CSS
-- AWS Amplify
+# 4. Iniciar servidor local
+npm start
 
-## 🚀 Instalação 
+🛠️ Tecnologias Principais
+React
 
-src/
-├── components/
-├── pages/
-├── context/
-├── services/
-├── types/
-└── App.tsx
+TypeScript
 
+AWS Amplify (deploy sem autenticação)
 
-#Última alteração: Teste de publicação no AWS Amplify.
+ESLint
+
+vacation-manager/
+├── public/
+├── src/
+│   ├── components/
+│   ├── App.tsx
+│   ├── index.tsx
+├── amplify/ (após configuração Amplify)
+├── package.json
+└── README.md
