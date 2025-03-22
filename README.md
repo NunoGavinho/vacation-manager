@@ -33,3 +33,6 @@ src/
 ├── services/
 ├── types/
 └── App.tsx
+
+
+#Última alteração: Teste de publicação no AWS Amplify.
