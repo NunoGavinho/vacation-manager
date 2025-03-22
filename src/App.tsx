@@ -1,8 +1,14 @@
 import React from 'react';
-import Main from './components/main';
+
 
 function App() {
-  return <Main />;
+  /*return <DeployAmplify />;*/
+  return (
+      <div>
+        <h1> Vamos a eles Ancora Praia</h1>
+        <p>App me cima</p>
+      </div>
+  )
 }
 
 export default App;
