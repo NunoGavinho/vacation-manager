@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { useAuth } from '../context/AuthContext'
-import { MyEvent, User } from '../types'
+import { MyEvent } from '../types'
 
 export default function AdminPanel() {
     const { user, logout } = useAuth()
@@ -14,185 +14,182 @@ export default function AdminPanel() {
                 ...e,
                 start: new Date(e.start),
                 end: new Date(e.end),
-                userEmail: e.userEmail || 'Não especificado'
+                userEmail: e.userEmail || 'Não registado'
             }))
-            setEvents(parsedEvents.filter(e => e.status === 'pending' && e.userEmail !== user?.email))
+            setEvents(parsedEvents.filter(e => e.status === 'pending'))
         }
-    }, [user?.email])
+    }, [])
 
-    const updateEventStatus = (eventId: number, status: 'approved' | 'rejected') => {
-        const storedEvents = localStorage.getItem('vacationEvents')
-        if (storedEvents) {
-            const allEvents: MyEvent[] = JSON.parse(storedEvents).map((e: any) => ({
-                ...e,
-                start: new Date(e.start),
-                end: new Date(e.end)
-            }))
-
-            const updatedEvents = allEvents.map(event =>
-                event.id === eventId ? { ...event, status } : event
-            )
-
-            localStorage.setItem('vacationEvents', JSON.stringify(updatedEvents))
-            setEvents(updatedEvents.filter(e => e.status === 'pending' && e.userEmail !== user?.email))
-        }
-    }
-
-    if (!user) {
-        return (
-            <Loading>
-                <p>Carregando...</p>
-            </Loading>
+    const handleDecision = (id: number, status: 'approved' | 'rejected') => {
+        const updated = events.map(event =>
+            event.id === id ? { ...event, status } : event
         )
+        localStorage.setItem('vacationEvents', JSON.stringify(updated))
+        setEvents(updated.filter(e => e.status === 'pending'))
     }
+
+    if (!user) return <Loading>Carregando...</Loading>
 
     return (
         <Wrapper>
-            <Header>Admin Dashboard</Header>
+            <Header>Vertsa Play</Header>
 
-            <UserInfo>
-                <div>
+            <UserContainer>
+                <UserInfo>
                     <UserEmail>{user.email}</UserEmail>
                     <UserRole>{user.role.toUpperCase()}</UserRole>
-                </div>
+                </UserInfo>
                 <SignOutButton onClick={logout}>Sair</SignOutButton>
-            </UserInfo>
+            </UserContainer>
 
-            <Title>Blocos Pendentes para Aprovação</Title>
+            <Title>Pedidos Pendentes</Title>
 
-            {events.length === 0 ? (
-                <EmptyMessage>Não há blocos pendentes para aprovação.</EmptyMessage>
-            ) : (
-                <EventsList>
-                    {events.map(event => (
-                        <EventItem key={event.id}>
-                            <EventDetails>
-                                <EventTitle>{event.title}</EventTitle>
-                                <EventDates>
-                                    {event.start.toLocaleDateString('pt-PT')} - {event.end.toLocaleDateString('pt-PT')}
-                                </EventDates>
-                                <EventUser>Solicitado por: {event.userEmail}</EventUser>
-                            </EventDetails>
-                            <EventActions>
-                                <ApproveButton onClick={() => updateEventStatus(event.id, 'approved')}>
+            <RequestList>
+                {events.length > 0 ? (
+                    events.map(event => (
+                        <RequestItem key={event.id}>
+                            <RequestDetails>
+                                <RequestTitle>{event.title}</RequestTitle>
+                                <RequestMeta>
+                                    <strong>Solicitante:</strong> {event.userEmail}
+                                </RequestMeta>
+                                <RequestMeta>
+                                    <strong>Período:</strong> {event.start.toLocaleDateString('pt-PT')} → {event.end.toLocaleDateString('pt-PT')}
+                                </RequestMeta>
+                            </RequestDetails>
+                            <RequestActions>
+                                <ApproveButton onClick={() => handleDecision(event.id, 'approved')}>
                                     Aprovar
                                 </ApproveButton>
-                                <RejectButton onClick={() => updateEventStatus(event.id, 'rejected')}>
+                                <RejectButton onClick={() => handleDecision(event.id, 'rejected')}>
                                     Rejeitar
                                 </RejectButton>
-                            </EventActions>
-                        </EventItem>
-                    ))}
-                </EventsList>
-            )}
+                            </RequestActions>
+                        </RequestItem>
+                    ))
+                ) : (
+                    <EmptyState>Nenhuma solicitação pendente</EmptyState>
+                )}
+            </RequestList>
         </Wrapper>
     )
 }
 
-// Estilos completos e corrigidos
 const Wrapper = styled.div`
-    padding: 2rem;
-    background: #f5f5f5;
     min-height: 100vh;
-    font-family: 'Arial', sans-serif;
+    padding: 2rem;
+    background: linear-gradient(90deg, #ff6a00 70%, #1f005c 100%);
+    color: white;
+    font-family: 'Poppins', sans-serif;
 `
 
 const Header = styled.h1`
-    color: #333;
+    font-size: 2rem;
+    font-weight: 600;
+    border: 2px solid white;
+    padding: 0.5rem 1.5rem;
+    width: fit-content;
     margin-bottom: 2rem;
-    border-bottom: 2px solid #333;
-    padding-bottom: 0.5rem;
+`
+
+const UserContainer = styled.div`
+    background: rgba(255, 255, 255, 0.1);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 `
 
 const UserInfo = styled.div`
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    padding: 1rem;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-direction: column;
+    gap: 0.5rem;
 `
 
-const UserEmail = styled.p`
-    font-weight: bold;
-    margin: 0;
-    color: #333;
+const UserEmail = styled.span`
+    font-size: 1rem;
+    font-weight: 500;
 `
 
-const UserRole = styled.p`
-    margin: 0;
-    color: #666;
+const UserRole = styled.span`
     font-size: 0.9rem;
+    color: #ddd;
+    text-transform: capitalize;
 `
 
 const SignOutButton = styled.button`
-    background: #ff4444;
+    background: transparent;
+    border: 1px solid white;
     color: white;
-    border: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
     &:hover {
-        background: #cc0000;
+        background: rgba(255, 255, 255, 0.2);
     }
 `
 
 const Title = styled.h2`
-    color: #333;
+    font-size: 1.5rem;
     margin-bottom: 1.5rem;
 `
 
-const EventsList = styled.div`
-    display: grid;
+const RequestList = styled.div`
+    display: flex;
+    flex-direction: column;
     gap: 1rem;
 `
 
-const EventItem = styled.div`
-    background: #fff;
+const RequestItem = styled.div`
+    background: rgba(255, 255, 255, 0.1);
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: all 0.2s;
+    &:hover {
+        background: rgba(255, 255, 255, 0.15);
+    }
 `
 
-const EventDetails = styled.div`
-    flex: 1;
-`
-
-const EventTitle = styled.h3`
-    margin: 0 0 0.5rem 0;
-    color: #333;
-`
-
-const EventDates = styled.p`
-    margin: 0 0 0.5rem 0;
-    color: #555;
-`
-
-const EventUser = styled.p`
-    margin: 0 0 0.5rem 0;
-    color: #555;
-    font-style: italic;
-`
-
-const EventActions = styled.div`
+const RequestDetails = styled.div`
     display: flex;
+    flex-direction: column;
     gap: 0.5rem;
 `
 
+const RequestTitle = styled.span`
+    font-size: 1.1rem;
+    font-weight: 500;
+`
+
+const RequestMeta = styled.span`
+    font-size: 0.9rem;
+    color: #ddd;
+    strong {
+        color: white;
+        font-weight: 500;
+    }
+`
+
+const RequestActions = styled.div`
+    display: flex;
+    gap: 0.75rem;
+`
+
 const ApproveButton = styled.button`
-    background: #4CAF50;
+    background: #4caf50;
     color: white;
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.2s;
+    font-weight: 500;
+    transition: all 0.2s;
     &:hover {
         background: #3e8e41;
     }
@@ -205,28 +202,25 @@ const RejectButton = styled.button`
     padding: 0.5rem 1rem;
     border-radius: 4px;
     cursor: pointer;
-    transition: background 0.2s;
+    font-weight: 500;
+    transition: all 0.2s;
     &:hover {
         background: #d32f2f;
     }
 `
 
-const EmptyMessage = styled.p`
-    color: #666;
+const EmptyState = styled.div`
     text-align: center;
     padding: 2rem;
-    background: #fff;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    color: #ccc;
+    font-style: italic;
 `
 
 const Loading = styled.div`
     text-align: center;
     padding: 2rem;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    color: white;
     font-size: 1.2rem;
 `

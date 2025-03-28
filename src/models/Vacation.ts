@@ -1,6 +1,10 @@
 export interface Vacation {
-    id: string
-    userId: string
-    startDate: string
-    endDate: string
+    id: number;
+    title: string;
+    start: Date;
+    end: Date;
+    status: 'pending' | 'approved' | 'rejected';
+    userId: string;
+    userEmail: string;
+    userName?: string;
 }

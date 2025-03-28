@@ -178,7 +178,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
         <DashboardContainer>
             <Header>
                 <Title>Vertsa Play</Title>
-                <UserEmail>{user.email}</UserEmail>
+                <HeaderControls>
+                    <UserInfo>
+                        <Email>{user.email}</Email>
+                        <LogoutButton onClick={signOut}>Sair</LogoutButton>
+                    </UserInfo>
+                </HeaderControls>
             </Header>
 
             <MainContent>
@@ -230,7 +235,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
     );
 };
 
-// Estilos
+// Estilos atualizados
 const DashboardContainer = styled.div`
     min-height: 100vh;
     padding: 2rem;
@@ -240,24 +245,54 @@ const DashboardContainer = styled.div`
 `;
 
 const Header = styled.header`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
 const Title = styled.h1`
     font-size: 2rem;
     font-weight: 600;
-    margin: 0 0 0.5rem 0;
+    margin: 0;
     padding: 0.5rem 1.5rem;
     border: 2px solid white;
     width: fit-content;
 `;
 
-const UserEmail = styled.div`
+const HeaderControls = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+`;
+
+const UserInfo = styled.div`
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+`;
+
+const Email = styled.span`
     font-size: 1rem;
     background: rgba(255, 255, 255, 0.1);
     padding: 0.5rem 1rem;
     border-radius: 4px;
-    width: fit-content;
+`;
+
+const LogoutButton = styled.button`
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
 `;
 
 const MainContent = styled.div`
@@ -370,10 +405,11 @@ const DeleteButton = styled.button`
 
 const CalendarSection = styled.section`
     flex: 1;
-    background: white;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 8px;
     padding: 1rem;
     color: black;
+    backdrop-filter: blur(2px);
 `;
 
 const YearNavigation = styled.div`
@@ -403,32 +439,38 @@ const CurrentYear = styled.h2`
 `;
 
 const YearGrid = styled.div`
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
 
-    @media (max-width: 1600px) {
-        grid-template-columns: repeat(2, 1fr);
-    }
+  @media (max-width: 1600px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-    @media (max-width: 1000px) {
-        grid-template-columns: 1fr;
-    }
+  @media (max-width: 1000px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 const MonthCard = styled.div`
-    border: 1px solid #eee;
-    border-radius: 8px;
-    overflow: hidden;
-    background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.95);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
 `;
 
 const MonthTitle = styled.h3`
-    text-align: center;
-    margin: 0;
-    padding: 0.5rem;
-    background: #f5f5f5;
-    color: #333;
+  text-align: center;
+  margin: 0;
+  padding: 0.5rem;
+  background: #f5f5f5;
+  color: #333;
 `;
 
 export default Dashboard;

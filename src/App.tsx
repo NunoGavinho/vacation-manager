@@ -19,10 +19,7 @@ export default function App() {
                 />
             )}
             {user?.role === 'admin' && (
-                <Route
-                    path="/admin"
-                    element={<AdminPanel user={user} signOut={logout} />}
-                />
+                <Route path="/admin" element={<AdminPanel />} />
             )}
             <Route path="/users" element={<Users />} />
         </Routes>

@@ -1,79 +1,52 @@
-import React, { useState } from 'react'
-import { MyEvent } from './Dashboard'
-import { useAuth } from '../context/AuthContext'
+import React, { useEffect, useState } from 'react';
+import { vacationService } from '../services/vacationService';
+import { Vacation } from '../models/Vacation';
 
 export default function Admin() {
-    const { user } = useAuth()  // Podemos verificar se o usuário é admin aqui, se necessário
-    const [events, setEvents] = useState<MyEvent[]>([]) // Lista de eventos a serem aprovados ou rejeitados
+    const [requests, setRequests] = useState<Vacation[]>([]);
 
+    useEffect(() => {
+        loadRequests();
+    }, []);
 
-    const fetchPendingEvents = () => {
+    const loadRequests = async () => {
+        const pending = await vacationService.getPendingRequests();
+        setRequests(pending);
+    };
 
-        const pendingEvents: MyEvent[] = [
-            {
-                id: 1,
-                title: 'Férias de João',
-                start: new Date('2023-06-01'),
-                end: new Date('2023-06-05'),
-                status: 'pending'
-            },
-            {
-                id: 2,
-                title: 'Férias de Maria',
-                start: new Date('2023-07-01'),
-                end: new Date('2023-07-07'),
-                status: 'pending'
-            }
-        ]
-        setEvents(pendingEvents)
-    }
-
-
-    const approveEvent = (eventId: number) => {
-        setEvents(events.map(event =>
-            event.id === eventId ? { ...event, status: 'approved' } : event
-        ))
-        alert(' Bloco aprovado!')
-    }
-
-
-    const rejectEvent = (eventId: number) => {
-        setEvents(events.filter(event => event.id !== eventId))
-        alert(' Bloco de férias rejeitado.')
-    }
-
-
-    const isAdmin = user?.role === 'admin'
+    const handleDecision = async (id: number, decision: 'approved' | 'rejected') => {
+        if (decision === 'approved') {
+            await vacationService.approveRequest(id);
+        } else {
+            await vacationService.rejectRequest(id);
+        }
+        loadRequests();
+    };
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <h1>Admin Dashboard</h1>
-            <p>Olá, {user?.email}</p>
+        <div className="admin-container">
+            <h2>Solicitações de Férias Pendentes</h2>
 
-            <h2>Blocos Pendentes para Aprovação</h2>
-
-            <button onClick={fetchPendingEvents}>Carregar Blocos Pendentes</button>
-
-            {events.length === 0 ? (
-                <p>Não há blocos pendentes para aprovação.</p>
+            {requests.length === 0 ? (
+                <p>Nenhuma solicitação pendente</p>
             ) : (
-                <div>
-                    {events.map(event => (
-                        <div key={event.id} style={{ marginBottom: '1rem' }}>
-                            <p>
-                                {event.title} | {event.start.toLocaleDateString()} - {event.end.toLocaleDateString()}
-                            </p>
-                            <p>Status: {event.status}</p>
-                            <div>
+                <div className="requests-list">
+                    {requests.map(request => (
+                        <div key={request.id} className="request-card">
+                            <h3>{request.title}</h3>
+                            <p><strong>Solicitante:</strong> {request.userName || request.userEmail}</p>
+                            <p><strong>Período:</strong> {request.start.toLocaleDateString()} a {request.end.toLocaleDateString()}</p>
+
+                            <div className="action-buttons">
                                 <button
-                                    onClick={() => approveEvent(event.id)}
-                                    disabled={event.status === 'approved'}
+                                    onClick={() => handleDecision(request.id, 'approved')}
+                                    className="approve-btn"
                                 >
                                     Aprovar
                                 </button>
                                 <button
-                                    onClick={() => rejectEvent(event.id)}
-                                    disabled={event.status === 'approved'}
+                                    onClick={() => handleDecision(request.id, 'rejected')}
+                                    className="reject-btn"
                                 >
                                     Rejeitar
                                 </button>
@@ -83,5 +56,5 @@ export default function Admin() {
                 </div>
             )}
         </div>
-    )
+    );
 }

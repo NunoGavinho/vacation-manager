@@ -1,11 +1,10 @@
-export type EventStatus = 'pending' | 'approved' | 'rejected'
-
+// src/types.ts
 export interface MyEvent {
     id: number
     title: string
     start: Date
     end: Date
-    status: EventStatus
+    status: 'pending' | 'approved' | 'rejected'
     userEmail: string
 }
 
