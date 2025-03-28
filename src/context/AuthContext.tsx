@@ -1,26 +1,59 @@
-import React, { createContext, useContext, useState } from 'react'
-import { User } from '../models/User'
+import React, { createContext, useContext, useState, ReactNode } from 'react'
 
-interface AuthContextType {
+export type Role = 'admin' | 'user'
+
+export type User = {
+    id: string
+    email: string
+    position: string
+    role: Role
+}
+
+type AuthContextType = {
     user: User | null
-    login: (email: string, password: string) => Promise<void>
+    login: (email: string, password: string) => User | false
     logout: () => void
 }
 
-const AuthContext = createContext<AuthContextType>({} as AuthContextType)
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const mockUsers: User[] = [
+    {
+        id: '1',
+        email: 'admin@projeto.com',
+        position: 'CTO',
+        role: 'admin',
+    },
+    {
+        id: '2',
+        email: 'maria@projeto.com',
+        position: 'Designer',
+        role: 'user',
+    },
+    {
+        id: '3',
+        email: 'joao@projeto.com',
+        position: 'Developer',
+        role: 'user',
+    },
+]
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<User | null>(null)
 
-    const login = async (email: string, password: string) => {
-        const { token, user } = await import('../services/authService').then(s => s.login(email, password))
-        localStorage.setItem('token', token)
-        setUser(user)
+    const login = (email: string, password: string): User | false => {
+        const foundUser = mockUsers.find((u) => u.email === email)
+        if (foundUser) {
+            setUser(foundUser)
+            localStorage.setItem('user', JSON.stringify(foundUser))
+            return foundUser
+        }
+        return false
     }
 
     const logout = () => {
-        localStorage.removeItem('token')
         setUser(null)
+        localStorage.removeItem('user')
     }
 
     return (
@@ -30,4 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     )
 }
 
-export const useAuth = () => useContext(AuthContext)
+export const useAuth = () => {
+    const context = useContext(AuthContext)
+    if (!context) throw new Error('useAuth must be used within AuthProvider')
+    return context
+}

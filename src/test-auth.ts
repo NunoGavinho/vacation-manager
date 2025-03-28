@@ -1,9 +1,7 @@
-import authService from './services/authService';
+import { getCurrentUserSession } from './services/auth'
 
 async function test() {
-    const user = await authService.getCurrentUser();
-    console.log('Usuário atual:', user);
-    console.log('Token:', await authService.getToken());
+    const user = await getCurrentUserSession()
+    console.log(user)
 }
-
-test();
+test()

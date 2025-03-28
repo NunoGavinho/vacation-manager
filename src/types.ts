@@ -1,14 +1,14 @@
-export type User = {
-    email: string
-    position: string
-    role: 'admin' | 'user'
+export interface MyEvent {
+    id: number;
+    title: string;
+    start: Date;
+    end: Date;
+    allDay?: boolean;
+    status: 'pending' | 'approved' | 'rejected';
 }
 
-export type MyEvent = {
-    id: number
-    title: string
-    start: Date
-    end: Date
-    status?: 'pending' | 'approved' | 'rejected'
-    allDay?: boolean
+export interface User {
+    email: string;
+    position: string;
+    role: 'admin' | 'user';
 }

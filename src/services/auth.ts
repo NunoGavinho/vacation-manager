@@ -1,11 +1,16 @@
-import { Auth } from 'aws-amplify';
+import { signIn, signOut, fetchAuthSession, getCurrentUser } from 'aws-amplify/auth'
 
-export const getToken = async () => {
-    try {
-        const session = await Auth.currentSession();
-        return session.getIdToken().getJwtToken();
-    } catch (error) {
-        console.error('Erro ao obter token:', error);
-        return null;
-    }
-};
+export const login = async (email: string, password: string) => {
+    const user = await signIn({ username: email, password })
+    const session = await fetchAuthSession()
+    const token = session.tokens?.idToken?.toString() || ''
+    return { user, token }
+}
+
+export const logout = async () => {
+    await signOut()
+}
+
+export const getCurrentUserSession = async () => {
+    return await getCurrentUser()
+}

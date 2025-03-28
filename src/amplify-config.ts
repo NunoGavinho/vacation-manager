@@ -1,4 +1,5 @@
 import { Amplify } from 'aws-amplify';
-// @ts-ignore
-const awsExports = require('../src/aws-exports').default;
-Amplify.configure(awsExports);
+import awsconfig from './aws-exports.js';
+
+Amplify.configure(awsconfig);
+

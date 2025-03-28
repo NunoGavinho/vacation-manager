@@ -1,15 +1,30 @@
-import { Authenticator } from '@aws-amplify/ui-react';
-import '@aws-amplify/ui-react/styles.css';
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import Login from './pages/Login'
+import Dashboard from './pages/Dashboard'
+import AdminPanel from './pages/AdminPanel'
+import Users from './pages/Users'
+import { useAuth } from './context/AuthContext'
 
 export default function App() {
+    const { user, logout } = useAuth()
+
     return (
-        <Authenticator>
-            {({ signOut, user }) => (
-                <div>
-                    <h1>Bem vindo, {user?.username}</h1>
-                    <button onClick={signOut}>Sair</button>
-                </div>
+        <Routes>
+            <Route path="/" element={<Login />} />
+            {user && (
+                <Route
+                    path="/dashboard"
+                    element={<Dashboard user={user} signOut={logout} />}
+                />
             )}
-        </Authenticator>
-    );
+            {user?.role === 'admin' && (
+                <Route
+                    path="/admin"
+                    element={<AdminPanel user={user} signOut={logout} />}
+                />
+            )}
+            <Route path="/users" element={<Users />} />
+        </Routes>
+    )
 }

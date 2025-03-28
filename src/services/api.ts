@@ -1,11 +1,20 @@
-import { API } from 'aws-amplify';
-import { getToken } from './authService';
+import { get } from 'aws-amplify/api'
+import { fetchAuthSession } from 'aws-amplify/auth'
 
 export const fetchData = async (endpoint: string) => {
-    const token = await getToken();
-    if (!token) throw new Error('Usuário não autenticado!');
+    const session = await fetchAuthSession()
+    const token = session.tokens?.idToken?.toString() || ''
 
-    return API.get('VacationAPI', endpoint, {
-        headers: { Authorization: token }
-    });
-};
+    const response = await get({
+        apiName: 'AdminQueries',
+        path: endpoint,
+        options: {
+            headers: {
+                Authorization: token,
+            },
+        },
+    }).response
+
+    const data = await response.body.json()
+    return Array.isArray(data) ? data : []
+}
