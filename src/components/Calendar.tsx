@@ -1,130 +1,130 @@
 import React, { useState, useEffect } from 'react';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
+import { Calendar as BigCalendar, momentLocalizer, SlotInfo } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
 import './Calendar.css';
-import { Vacation } from '../models/Vacation';
+
+const localizer = momentLocalizer(moment);
+
+type Vacation = {
+    id: string;
+    start: Date;
+    end: Date;
+    status: 'pending';
+};
 
 const Calendar: React.FC = () => {
-    const [startDate, setStartDate] = useState<Date | null>(new Date());
-    const [endDate, setEndDate] = useState<Date | null>(new Date());
-    const [description, setDescription] = useState('');
     const [vacations, setVacations] = useState<Vacation[]>([]);
-    const [editingVacationId, setEditingVacationId] = useState<string | null>(null);
+    const [remainingDays, setRemainingDays] = useState<number>(22);
 
     useEffect(() => {
-        const storedVacations = localStorage.getItem('vacations');
-        if (storedVacations) {
-            setVacations(JSON.parse(storedVacations));
+        const saved = localStorage.getItem('vacationRequests');
+        if (saved) {
+            const parsed = JSON.parse(saved).map((v: any) => ({
+                ...v,
+                start: new Date(v.start),
+                end: new Date(v.end),
+            }));
+            setVacations(parsed);
+            const used = parsed.reduce((acc: number, v: Vacation) => acc + countWeekdays(v.start, v.end), 0);
+            setRemainingDays(22 - used);
         }
     }, []);
 
     useEffect(() => {
-        localStorage.setItem('vacations', JSON.stringify(vacations));
+        localStorage.setItem('vacationRequests', JSON.stringify(vacations));
+        const used = vacations.reduce((acc: number, v: Vacation) => acc + countWeekdays(v.start, v.end), 0);
+        setRemainingDays(22 - used);
     }, [vacations]);
 
-    const handleStartDateChange = (date: Date | null) => {
-        setStartDate(date);
+    const isWeekday = (date: Date) => {
+        const day = date.getDay();
+        return day !== 0 && day !== 6;
     };
 
-    const handleEndDateChange = (date: Date | null) => {
-        setEndDate(date);
-    };
-
-    const handleDescriptionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setDescription(e.target.value);
-    };
-
-    const handleAddVacation = () => {
-        if (startDate && endDate) {
-            const newVacation: Vacation = {
-                id: Math.random().toString(),
-                startDate: startDate,
-                endDate: endDate,
-                description: description,
-            };
-            setVacations([...vacations, newVacation]);
-            setStartDate(new Date());
-            setEndDate(new Date());
-            setDescription('');
+    const countWeekdays = (start: Date, end: Date): number => {
+        let count = 0;
+        const current = new Date(start);
+        while (current <= end) {
+            if (isWeekday(current)) count++;
+            current.setDate(current.getDate() + 1);
         }
+        return count;
     };
 
-    const handleRemoveVacation = (id: string) => {
-        setVacations(vacations.filter((vacation) => vacation.id !== id));
+    const hasOverlap = (start: Date, end: Date): boolean => {
+        return vacations.some(v => !(end < v.start || start > v.end));
     };
 
-    const handleEditVacation = (vacation: Vacation) => {
-        setEditingVacationId(vacation.id);
-        setStartDate(vacation.startDate);
-        setEndDate(vacation.endDate);
-        setDescription(vacation.description || '');
-    };
+    const handleSelectSlot = (slot: SlotInfo) => {
+        const { start, end } = slot;
 
-    const handleUpdateVacation = () => {
-        if (startDate && endDate && editingVacationId) {
-            const updatedVacations = vacations.map((vacation) => {
-                if (vacation.id === editingVacationId) {
-                    return {
-                        ...vacation,
-                        startDate: startDate,
-                        endDate: endDate,
-                        description: description,
-                    };
-                }
-                return vacation;
-            });
-            setVacations(updatedVacations);
-            setEditingVacationId(null);
-            setStartDate(new Date());
-            setEndDate(new Date());
-            setDescription('');
+        if (!isWeekday(start) || !isWeekday(end)) {
+            alert('Só é permitido escolher dias úteis (segunda a sexta).');
+            return;
         }
+
+        const daysToAdd = countWeekdays(start, end);
+
+        if (daysToAdd > remainingDays) {
+            alert(`Você só pode escolher até ${remainingDays} dias.`);
+            return;
+        }
+
+        if (hasOverlap(start, end)) {
+            alert('O período selecionado se sobrepõe com um período já marcado.');
+            return;
+        }
+
+        const newVacation: Vacation = {
+            id: Math.random().toString(),
+            start,
+            end,
+            status: 'pending',
+        };
+
+        setVacations([...vacations, newVacation]);
     };
 
-    const handleCancelEdit = () => {
-        setEditingVacationId(null);
-        setStartDate(new Date());
-        setEndDate(new Date());
-        setDescription('');
+    const eventStyleGetter = () => {
+        return {
+            style: {
+                backgroundColor: '#f0ad4e',
+                borderRadius: '4px',
+                color: 'white',
+                border: 'none',
+                padding: '2px',
+            }
+        };
     };
+
+    const calendarEvents = vacations.map(v => ({
+        title: `Férias (${v.status})`,
+        start: v.start,
+        end: v.end,
+        allDay: true,
+    }));
 
     return (
-        <div className="calendar">
-            <h2>Calendar</h2>
-            <div>
-                <label>Start Date:</label>
-                <DatePicker selected={startDate} onChange={handleStartDateChange} />
+        <div className="calendar-container">
+            <h2>Calendário de Férias</h2>
+            <p>Dias restantes: {remainingDays}</p>
+            <div style={{ height: 600 }}>
+                <BigCalendar
+                    localizer={localizer}
+                    events={calendarEvents}
+                    startAccessor="start"
+                    endAccessor="end"
+                    selectable
+                    onSelectSlot={handleSelectSlot}
+                    eventPropGetter={eventStyleGetter}
+                    views={['month', 'agenda', 'week']}
+                    defaultView="month"
+                    popup
+                />
             </div>
-            <div>
-                <label>End Date:</label>
-                <DatePicker selected={endDate} onChange={handleEndDateChange} />
-            </div>
-            <div>
-                <label>Description:</label>
-                <textarea value={description} onChange={handleDescriptionChange} />
-            </div>
-            {editingVacationId ? (
-                <>
-                    <button onClick={handleUpdateVacation}>Update Vacation</button>
-                    <button onClick={handleCancelEdit}>Cancel</button>
-                </>
-            ) : (
-                <button onClick={handleAddVacation}>Add Vacation</button>
-            )}
-            <h3>Your Vacations:</h3>
-            <ul>
-                {vacations.map((vacation) => (
-                    <li key={vacation.id}>
-                        {vacation.startDate.toLocaleDateString()} - {vacation.endDate.toLocaleDateString()}: {vacation.description}
-                        <button onClick={() => handleEditVacation(vacation)}>Edit</button>
-                        <button onClick={() => handleRemoveVacation(vacation.id)}>Remove</button>
-                    </li>
-                ))}
-            </ul>
         </div>
     );
 };
 
 export default Calendar;
-
-export {};

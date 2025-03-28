@@ -1,14 +1,15 @@
-import React from 'react';
-import Calendar from './components/Calendar';
-import './App.css';
+import { Authenticator } from '@aws-amplify/ui-react';
+import '@aws-amplify/ui-react/styles.css';
 
-function App() {
+export default function App() {
     return (
-        <div>
-            <h1>Vacation Manager</h1>
-            <Calendar />
-        </div>
+        <Authenticator>
+            {({ signOut, user }) => (
+                <div>
+                    <h1>Bem vindo, {user?.username}</h1>
+                    <button onClick={signOut}>Sair</button>
+                </div>
+            )}
+        </Authenticator>
     );
 }
-
-export default App;

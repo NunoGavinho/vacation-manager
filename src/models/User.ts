@@ -1,5 +1,8 @@
 export interface User {
-    id: string;
-    email: string;
-    role: 'admin' | 'user'; // Adicionado o campo 'role'
+    id: string
+    name: string
+    email: string
+    phone?: string
+    position: string
+    role: 'admin' | 'user'
 }

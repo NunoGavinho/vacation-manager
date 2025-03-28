@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES6",
     "lib": [
       "dom",
       "dom.iterable",
@@ -18,7 +18,16 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["node", "jest"],          // 👈 Suporte a testes e ambiente Node
+    "baseUrl": "src",                   // 👈 Permite importar com caminhos relativos a /src
+    "paths": {
+      "@components/*": ["components/*"],
+      "@pages/*": ["pages/*"],
+      "@services/*": ["services/*"],
+      "@models/*": ["models/*"],
+      "@context/*": ["context/*"]
+    }
   },
   "include": [
     "src"

@@ -1,6 +1,6 @@
 export interface Vacation {
-    id: string;
-    startDate: Date;
-    endDate: Date;
-    description?: string;
+    id: string
+    userId: string
+    startDate: string
+    endDate: string
 }
