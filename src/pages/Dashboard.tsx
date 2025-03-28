@@ -4,7 +4,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import styled from 'styled-components';
 
-// Configuração para Português
+
 moment.locale('pt', {
     months: 'Janeiro_Fevereiro_Março_Abril_Maio_Junho_Julho_Agosto_Setembro_Outubro_Novembro_Dezembro'.split('_'),
     weekdays: 'Domingo_Segunda-feira_Terça-feira_Quarta-feira_Quinta-feira_Sexta-feira_Sábado'.split('_'),
@@ -12,7 +12,6 @@ moment.locale('pt', {
 
 const localizer = momentLocalizer(moment);
 
-// Tipos
 type EventStatus = 'pending' | 'approved' | 'rejected';
 
 interface MyEvent {
@@ -32,58 +31,11 @@ interface DashboardProps {
     signOut: () => void;
 }
 
-// Componente de Calendário Anual
-const YearCalendarView = ({ events, currentYear, onSelectSlot }: {
-    events: MyEvent[];
-    currentYear: Date;
-    onSelectSlot: (slot: { start: Date, end: Date }) => void;
-}) => {
-    const months = Array.from({ length: 12 }, (_, i) => moment(currentYear).month(i));
-
-    return (
-        <YearGrid>
-            {months.map((month) => (
-                <MonthCard key={month.format('MM-YYYY')}>
-                    <MonthTitle>{month.format('MMMM YYYY')}</MonthTitle>
-                    <Calendar
-                        localizer={localizer}
-                        events={events.filter(event =>
-                            moment(event.start).isSame(month, 'month') ||
-                            moment(event.end).isSame(month, 'month')
-                        )}
-                        startAccessor="start"
-                        endAccessor="end"
-                        defaultView="month"
-                        view="month"
-                        date={month.toDate()}
-                        toolbar={false}
-                        onSelectSlot={onSelectSlot}
-                        selectable
-                        style={{ height: 240 }}
-                        eventPropGetter={(event) => ({
-                            style: {
-                                backgroundColor:
-                                    event.status === 'approved' ? '#4CAF50' :
-                                        event.status === 'rejected' ? '#F44336' : '#FFC107',
-                                color: '#fff',
-                                borderRadius: '4px',
-                                border: 'none',
-                            },
-                        })}
-                    />
-                </MonthCard>
-            ))}
-        </YearGrid>
-    );
-};
-
-// Componente Principal
 const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
     const [events, setEvents] = useState<MyEvent[]>([]);
     const [usedDays, setUsedDays] = useState(0);
     const [currentYear, setCurrentYear] = useState(new Date());
 
-    // Funções auxiliares
     const isWeekday = (date: Date) => {
         const day = date.getDay();
         return day !== 0 && day !== 6;
@@ -109,7 +61,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
         return days;
     };
 
-    // Carregar eventos salvos
     useEffect(() => {
         const savedEvents = localStorage.getItem('vacationEvents');
         if (savedEvents) {
@@ -120,30 +71,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
                     end: new Date(e.end),
                 }));
                 setEvents(parsedEvents);
-
-                const totalDays = parsedEvents.reduce((sum: number, event: MyEvent) => {
-                    if (event.status === 'pending' || event.status === 'approved') {
-                        return sum + countWeekdaysBetween(event.start, event.end);
-                    }
-                    return sum;
-                }, 0);
-                setUsedDays(totalDays);
+                setUsedDays(parsedEvents.reduce((sum: number, event: MyEvent) => {
+                    return sum + (event.status !== 'rejected' ? countWeekdaysBetween(event.start, event.end) : 0);
+                }, 0));
             } catch (error) {
                 console.error('Erro ao carregar eventos:', error);
             }
         }
     }, []);
 
-    // Manipuladores de eventos
     const handleCreateEvent = (slotInfo: { start: Date, end: Date }) => {
         const weekdays = getWeekdaysBetween(slotInfo.start, slotInfo.end);
         if (weekdays.length === 0) return;
 
-        // Verificar sobreposição
         const hasOverlap = events.some(event =>
-            weekdays.some(day =>
-                day >= event.start && day <= event.end
-            )
+            weekdays.some(day => day >= event.start && day <= event.end)
         );
 
         if (hasOverlap) {
@@ -151,7 +93,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
             return;
         }
 
-        // Verificar limite de dias
         if (usedDays + weekdays.length > 22) {
             alert('Limite de 22 dias úteis excedido!');
             return;
@@ -190,50 +131,89 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
     };
 
     const navigateYear = (direction: 'prev' | 'next') => {
-        setCurrentYear(prev =>
-            moment(prev).add(direction === 'next' ? 1 : -1, 'year').toDate()
+        setCurrentYear(moment(currentYear).add(direction === 'next' ? 1 : -1, 'year').toDate());
+    };
+
+    const YearCalendarView = () => {
+        const months = Array.from({ length: 12 }, (_, i) => moment(currentYear).month(i));
+
+        return (
+            <YearGrid>
+                {months.map((month) => (
+                    <MonthCard key={month.format('MM-YYYY')}>
+                        <MonthTitle>{month.format('MMMM YYYY')}</MonthTitle>
+                        <Calendar
+                            localizer={localizer}
+                            events={events.filter(event =>
+                                moment(event.start).isSame(month, 'month') ||
+                                moment(event.end).isSame(month, 'month')
+                            )}
+                            startAccessor="start"
+                            endAccessor="end"
+                            defaultView="month"
+                            view="month"
+                            date={month.toDate()}
+                            toolbar={false}
+                            onSelectSlot={handleCreateEvent}
+                            selectable
+                            style={{ height: 240 }}
+                            eventPropGetter={(event) => ({
+                                style: {
+                                    backgroundColor:
+                                        event.status === 'approved' ? '#4CAF50' :
+                                            event.status === 'rejected' ? '#F44336' : '#FFC107',
+                                    color: '#fff',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                },
+                            })}
+                        />
+                    </MonthCard>
+                ))}
+            </YearGrid>
         );
     };
 
     return (
         <DashboardContainer>
-            <HeaderContainer>
+            <Header>
                 <Title>Vertsa Play</Title>
-                <UserInfoContainer>
-                    <UserDetails>
-                        <Email>{user.email}</Email>
-                        <DaysUsed>{usedDays}/22 dias usados</DaysUsed>
-                    </UserDetails>
-                </UserInfoContainer>
-            </HeaderContainer>
+                <UserEmail>{user.email}</UserEmail>
+            </Header>
 
             <MainContent>
                 <EventsPanel>
-                    <EventsHeader>Meus Períodos de Férias</EventsHeader>
-                    <EventsListContainer>
-                        <EventsList>
-                            {events.map(event => (
-                                <EventItem key={event.id} status={event.status}>
-                                    <EventDates>
-                                        {moment(event.start).format('DD/MM')} - {moment(event.end).format('DD/MM')}
-                                    </EventDates>
-                                    <EventStatus status={event.status}>
-                                        {event.status === 'pending' && 'Pendente'}
-                                        {event.status === 'approved' && 'Aprovado'}
-                                        {event.status === 'rejected' && 'Recusado'}
-                                    </EventStatus>
-                                    {event.status !== 'approved' && (
-                                        <DeleteButton onClick={() => handleDeleteEvent(event.id)}>
-                                            Apagar
-                                        </DeleteButton>
-                                    )}
-                                </EventItem>
-                            ))}
-                        </EventsList>
-                        <SubmitButton onClick={handleSubmitForApproval}>
-                            Enviar para Aprovação
-                        </SubmitButton>
-                    </EventsListContainer>
+                    <EventsHeader>
+                        <span>Meus Períodos de Férias</span>
+                        <DaysUsed>{usedDays}/22</DaysUsed>
+                    </EventsHeader>
+
+                    <SubmitButton
+                        onClick={handleSubmitForApproval}
+                        disabled={events.filter(e => e.status === 'pending').length === 0}
+                    >
+                        Enviar para Aprovação
+                    </SubmitButton>
+
+                    <EventsList>
+                        {events.map(event => (
+                            <EventItem key={event.id} status={event.status}>
+                                <EventDates>
+                                    {moment(event.start).format('DD/MM')} - {moment(event.end).format('DD/MM')}
+                                </EventDates>
+                                <EventStatus status={event.status}>
+                                    {event.status === 'pending' && 'Pendente'}
+                                    {event.status === 'approved' && 'Aprovado'}
+                                    {event.status === 'rejected' && 'Recusado'}
+                                </EventStatus>
+                                {event.status !== 'approved' && (
+                                    <DeleteButton onClick={() => handleDeleteEvent(event.id)}>
+                                        Apagar
+                                    </DeleteButton>
+                                )}
+                            </EventItem>
+                        ))}
+                    </EventsList>
                 </EventsPanel>
 
                 <CalendarSection>
@@ -243,18 +223,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, signOut }) => {
                         <NavButton onClick={() => navigateYear('next')}>Próximo Ano ❯</NavButton>
                     </YearNavigation>
 
-                    <YearCalendarView
-                        events={events}
-                        currentYear={currentYear}
-                        onSelectSlot={handleCreateEvent}
-                    />
+                    <YearCalendarView />
                 </CalendarSection>
             </MainContent>
         </DashboardContainer>
     );
 };
 
-// Estilos Atualizados
+// Estilos
 const DashboardContainer = styled.div`
     min-height: 100vh;
     padding: 2rem;
@@ -263,50 +239,25 @@ const DashboardContainer = styled.div`
     font-family: 'Poppins', sans-serif;
 `;
 
-const HeaderContainer = styled.header`
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+const Header = styled.header`
     margin-bottom: 2rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
 const Title = styled.h1`
     font-size: 2rem;
     font-weight: 600;
-    margin: 0;
+    margin: 0 0 0.5rem 0;
     padding: 0.5rem 1.5rem;
     border: 2px solid white;
     width: fit-content;
 `;
 
-const UserInfoContainer = styled.div`
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-`;
-
-const UserDetails = styled.div`
-    display: flex;
-    gap: 2rem;
-    align-items: center;
-`;
-
-const Email = styled.span`
+const UserEmail = styled.div`
     font-size: 1rem;
     background: rgba(255, 255, 255, 0.1);
     padding: 0.5rem 1rem;
     border-radius: 4px;
-`;
-
-const DaysUsed = styled.span`
-    font-size: 1rem;
-    color: #ff9500;
-    font-weight: 500;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
+    width: fit-content;
 `;
 
 const MainContent = styled.div`
@@ -331,24 +282,46 @@ const EventsPanel = styled.aside`
     }
 `;
 
-const EventsHeader = styled.h2`
-    margin: 0 0 1rem 0;
-    font-size: 1.2rem;
+const EventsHeader = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
     padding-bottom: 0.5rem;
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 `;
 
-const EventsListContainer = styled.div`
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+const DaysUsed = styled.span`
+    font-size: 1rem;
+    color: #ff9500;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+`;
+
+const SubmitButton = styled.button<{ disabled?: boolean }>`
+    padding: 12px;
+    background: ${props => props.disabled ? '#666' : '#ff9500'};
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+    transition: all 0.2s;
+    margin-bottom: 1rem;
+
+    &:hover {
+        background: ${props => props.disabled ? '#666' : '#e68600'};
+        transform: ${props => props.disabled ? 'none' : 'translateY(-2px)'};
+    }
 `;
 
 const EventsList = styled.ul`
     flex: 1;
     list-style: none;
     padding: 0;
-    margin: 0 0 1rem 0;
+    margin: 0;
     overflow-y: auto;
     max-height: 500px;
     display: flex;
@@ -374,42 +347,25 @@ const EventDates = styled.span`
 `;
 
 const EventStatus = styled.span<{ status?: EventStatus }>`
-  font-weight: 500;
-  color: ${props =>
-    props.status === 'approved' ? '#4CAF50' :
-        props.status === 'rejected' ? '#F44336' : '#FFC107'};
-  margin: 0 1rem;
+    font-weight: 500;
+    color: ${props =>
+            props.status === 'approved' ? '#4CAF50' :
+                    props.status === 'rejected' ? '#F44336' : '#FFC107'};
+    margin: 0 1rem;
 `;
 
 const DeleteButton = styled.button`
-  padding: 4px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  background: transparent;
-  color: white;
-  cursor: pointer;
-  border-radius: 4px;
-  transition: all 0.2s;
+    padding: 4px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: transparent;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.2);
-  }
-`;
-
-const SubmitButton = styled.button`
-  padding: 12px;
-  background: #ff9500;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: auto;
-
-  &:hover {
-    background: #e68600;
-    transform: translateY(-2px);
-  }
+    &:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
 `;
 
 const CalendarSection = styled.section`

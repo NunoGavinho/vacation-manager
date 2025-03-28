@@ -1,14 +1,16 @@
+export type EventStatus = 'pending' | 'approved' | 'rejected'
+
 export interface MyEvent {
-    id: number;
-    title: string;
-    start: Date;
-    end: Date;
-    allDay?: boolean;
-    status: 'pending' | 'approved' | 'rejected';
+    id: number
+    title: string
+    start: Date
+    end: Date
+    status: EventStatus
+    userEmail: string
 }
 
 export interface User {
-    email: string;
-    position: string;
-    role: 'admin' | 'user';
+    email: string
+    role: 'admin' | 'user'
+    position: string
 }

@@ -33,13 +33,13 @@ export default function Admin() {
         setEvents(events.map(event =>
             event.id === eventId ? { ...event, status: 'approved' } : event
         ))
-        alert('✅ Bloco aprovado!')
+        alert(' Bloco aprovado!')
     }
 
 
     const rejectEvent = (eventId: number) => {
         setEvents(events.filter(event => event.id !== eventId))
-        alert('❌ Bloco de férias rejeitado.')
+        alert(' Bloco de férias rejeitado.')
     }
 
 
@@ -50,7 +50,7 @@ export default function Admin() {
             <h1>Admin Dashboard</h1>
             <p>Olá, {user?.email}</p>
 
-            <h2>📅 Blocos Pendentes para Aprovação</h2>
+            <h2>Blocos Pendentes para Aprovação</h2>
 
             <button onClick={fetchPendingEvents}>Carregar Blocos Pendentes</button>
 
